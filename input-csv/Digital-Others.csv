@@ -1,0 +1,13 @@
+Zone,Channel Name,Power,RX Freq,TX Freq,Color Code,Talk Group,TimeSlot,Call Type,TX Permit
+Simplex,DMR 145.79,High,145.79,145.79,1,Simplex 99,1,Group Call,Always
+Simplex,DMR 145.51,High,145.51,145.51,1,Simplex 99,1,Group Call,Always
+Simplex,DMR 441.00,High,441,441,1,Simplex 99,1,Group Call,Always
+Simplex,DMR 446.5,High,446.5,446.5,1,Simplex 99,1,Group Call,Always
+Simplex,DMR 446.075,High,446.075,446.075,1,Simplex 99,1,Group Call,Always
+Simplex,DMR 433.45,High,433.45,433.45,1,Simplex 99,1,Group Call,Always
+DMR APRS,BM 431 TS2,Mid,431,431,1,APRS 31099 PC,2,Private Call,Same Color Code
+DMR APRS,BM 432 TS2,Mid,432,432,1,APRS 31099 PC,2,Private Call,Same Color Code
+DMR APRS,BM 433 TS2,Mid,433,433,1,APRS 31099 PC,2,Private Call,Same Color Code
+DMR APRS,BM 434 TS1,Mid,434,434,1,APRS 31099 PC,1,Private Call,Same Color Code
+DMR APRS,BM 434 TS2,Mid,434,434,1,APRS 31099 PC,2,Private Call,Same Color Code
+DMR APRS,BM 435 TS2,Mid,435,435,1,APRS 31099 PC,2,Private Call,Same Color Code

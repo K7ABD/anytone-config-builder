@@ -1,0 +1,44 @@
+0,No.,REQUIRED
+1,Channel Name,REQUIRED
+2,Receive Frequency,REQUIRED
+3,Transmit Frequency,REQUIRED
+4,Channel Type,REQUIRED
+5,Transmit Power,High
+6,Band Width,12.5K
+7,CTCSS/DCS Decode,Off
+8,CTCSS/DCS Encode,Off
+9,Contact,Wash 1
+10,Contact Call Type,Group Call
+11,Radio ID,DMR ID
+12,Busy Lock/TX Permit,Same Color Code
+13,Squelch Mode,Carrier
+14,Optional Signal,Off
+15,DTMF ID,1
+16,2Tone ID,1
+17,5Tone ID,1
+18,PTT ID,Off
+19,Color Code,0
+20,Slot,1
+21,Scan List,REQUIRED
+22,Receive Group List,None
+23,TX Prohibit,Off
+24,Reverse,Off
+25,Simplex TDMA,Off
+26,TDMA Adaptive,Off
+27,Encryption Type,Normal Encryption
+28,Digital Encryption,Off
+29,Call Confirmation,Off
+30,Talk Around,Off
+31,Work Alone,Off
+32,Custom CTCSS,0.0
+33,2TONE Decode,1
+34,Ranging,Off
+35,Through Mode,Off
+36,Digi APRS RX,Off
+37,Analog APRS PTT Mode,Off
+38,Digital APRS PTT Mode,Off
+39,APRS Report Type,Off
+40,Digital APRS Report Channel,1
+41,Correct Frequency[Hz],0
+42,SMS Confirmation,Off
+43,Exclude channel from roaming,off

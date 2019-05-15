@@ -781,6 +781,6 @@ sub usage
 {
     print "$0 --analog-csv=<analog.csv> --digital-others-csv=<digital-others.csv> "
         . "--digital-repeaters-csv=<digital_repeaters.csv> --talkgroups-csv=<talkgroups.csv> "         
-        . "--output_directory=<output-directory> [--config=<config file>]\n";
+        . "--output-directory=<output-directory> [--config=<config file>]\n";
     exit -1;
 }

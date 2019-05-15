@@ -297,7 +297,7 @@ sub process_analog_file
                   "RX Freq", "TX Freq", "CTCSS Decode", "CTCSS Encode",
                   "TX Prohibit");
 
-    process_csv_file_with_header($fh, $filename, \@header, \&analog_csv_field_extractor);
+    process_csv_file_with_header($fh, $filename, "Analog", \@header, \&analog_csv_field_extractor);
 }
 
 sub analog_csv_field_extractor
@@ -330,7 +330,7 @@ sub process_dmr_others_file
     my @header = ("Zone", "Channel Name", "Power", "RX Freq", "TX Freq", "Color Code", "Talk Group", "TimeSlot", 
                   "Call Type", "TX Permit");
 
-    process_csv_file_with_header($fh, $filename, \@header, \&dmr_others_csv_field_extractor);
+    process_csv_file_with_header($fh, $filename, "Digital-Others", \@header, \&dmr_others_csv_field_extractor);
 }
 
 sub dmr_others_csv_field_extractor
@@ -368,8 +368,8 @@ sub process_dmr_repeater_file
 
     my @header = ("Zone Name", "Comment", "Power", "RX Freq", "TX Freq", "Color Code");
 
-    process_csv_file_with_header($fh, $filename, \@header, \&dmr_repeater_csv_field_extractor, 
-                                                           \&dmr_repeater_csv_matrix_extractor);
+    process_csv_file_with_header($fh, $filename, "Digital-Repeater", \@header, \&dmr_repeater_csv_field_extractor, 
+                                                                               \&dmr_repeater_csv_matrix_extractor);
 }
 
 sub dmr_repeater_csv_field_extractor
@@ -464,7 +464,7 @@ sub read_talkgroups
 #
 sub process_csv_file_with_header
 {
-    my ($out_fh, $filename, $header_ref, $field_extractor, $matrix_field_extractor) = @_;
+    my ($out_fh, $filename, $file_nickname, $header_ref, $field_extractor, $matrix_field_extractor) = @_;
 
     my @headers;
 
@@ -480,7 +480,7 @@ sub process_csv_file_with_header
 			{
 				if ($row->[$col] ne $header_ref->[$col])
 				{
-					die("header does match for '$filename' (found '" 
+					die("CSV header does not match for $file_nickname file (found '" 
                        . $row->[$col] ."' expected '" . $header_ref->[$col] . "')\n");
 				}
                 push @headers, $row->[$col];

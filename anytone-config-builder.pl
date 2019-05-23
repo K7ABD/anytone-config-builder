@@ -743,7 +743,6 @@ sub validate_name
 	return _validate_string_length('Channel Name', $name, 16);
 }
 
-
 sub validate_power
 {
     my ($power) = @_;

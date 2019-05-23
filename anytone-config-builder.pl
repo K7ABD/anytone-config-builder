@@ -152,7 +152,7 @@ sub zone_row_builder
     my @channels;
     my @rx_freqs;
     my @tx_freqs;
-    foreach my $zone_details (sort simple_sort @{$zone_record})
+    foreach my $zone_details (sort case_insensitive_sort @{$zone_record})
     {
         my ($order, $chan_name, $rx_freq, $tx_freq) = split("\t", $zone_details);  #TODO: don't use tabs...
         $chan_name =~ s/\s+$//;   #TODO: This sort of trimming should live WAAAAY higher elsewhere
@@ -190,10 +190,10 @@ sub write_scanlist_file
                    "Revert Channel", "Look Back Time A[s]", "Look Back Time B[s]", "Dropout Delay Time[s]", 
                    "Dwell Time[s]");
 
-    generate_csv_file($filename, \@headers, \%scanlist_config, \&scanlist_row_builder, \&simple_sort);
+    generate_csv_file($filename, \@headers, \%scanlist_config, \&scanlist_row_builder, \&case_insensitive_sort);
 }
 
-sub simple_sort
+sub case_insensitive_sort
 {
     # no fancy scanning rules here
     return lc($a) cmp lc($b);
@@ -212,7 +212,7 @@ sub scanlist_row_builder
     my @channels;
     my @rx_freqs;
     my @tx_freqs;
-    foreach my $scan_details (sort simple_sort @{$scan_record})
+    foreach my $scan_details (sort case_insensitive_sort @{$scan_record})
     {
         my ($order, $chan_name, $rx_freq, $tx_freq) = split("\t", $scan_details);  #TODO: don't use tabs...
         $chan_name =~ s/\s+$//;   #TODO: This sort of trimming should live WAAAAY higher elsewhere
@@ -254,7 +254,7 @@ sub write_talkgroup_file
 
     my @headers = ("No.", "Radio ID", "Name", "Country", "Remarks", "Call Type", "Call Alert");
 
-    generate_csv_file($filename, \@headers, \%talkgroup_config, \&talkgroup_row_builder, \&simple_sort);
+    generate_csv_file($filename, \@headers, \%talkgroup_config, \&talkgroup_row_builder, \&case_insensitive_sort);
 }
 
 sub talkgroup_row_builder

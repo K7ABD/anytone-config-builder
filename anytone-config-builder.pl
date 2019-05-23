@@ -35,14 +35,18 @@ use constant {
 };
 
 
+my $global_sort_mode = "alpha";
 
 my $global_channel_number = 1; 
 my %channel_csv_field_name;
 my %channel_csv_default_value;
 my %talkgroup_mapping;
 my %zone_config;
+my %zone_order;
+my $zone_order_default = 9999; # this impacts where the analog and digital-others go.
 my %scanlist_config;
 my %talkgroup_config;
+my %talkgroup_order;
 my $csv;
 
 main();
@@ -55,14 +59,22 @@ sub main
     my ($analog_filename, $digital_others_filename, $digital_repeaters_filename, $talkgroups_filename);
     my ($config_directory, $output_directory);
 
+    # TODO: move this to a subroutine, where it belongs. 
     # Handle Command-line arguments.
     GetOptions("analog-csv=s"             => \$analog_filename,
                "digital-others-csv=s"     => \$digital_others_filename,
                "digital-repeaters-csv=s"  => \$digital_repeaters_filename,
                "talkgroups-csv=s"         => \$talkgroups_filename,
                "config:s"                 => \$config_directory,
-               "output-directory=s"       => \$output_directory)
+               "output-directory=s"       => \$output_directory,
+               "sorting:s"                => \$global_sort_mode,)
         or usage();
+
+    validate_sort_mode($global_sort_mode);
+    if ($global_sort_mode eq "analog-first")
+    {
+        $zone_order_default = 0;
+    }
 
     if (!defined($analog_filename) || !defined($digital_others_filename) || !defined($digital_repeaters_filename)
         || !defined($talkgroups_filename) || !defined($output_directory))
@@ -107,8 +119,25 @@ sub write_zone_file
                      "A Channel",                  "A Channel RX Frequency",           "A Channel TX Frequency",
                      "B Channel",                  "B Channel RX Frequency",           "B Channel TX Frequency");
 
-    generate_csv_file($filename, \@headers, \%zone_config, \&zone_row_builder);
+    generate_csv_file($filename, \@headers, \%zone_config, \&zone_row_builder, \&zone_sort);
 
+}
+
+sub zone_sort
+{
+    my $a_i = $zone_order{$a};
+    my $b_i = $zone_order{$b};
+
+    # If we're in alphabetical mode or if the zone indexes are the same (which will be the case if we're in
+    # non-alphabetical mode for the analog and digital-other channels).
+    if ($global_sort_mode eq 'alpha' or $a_i == $b_i)
+    {
+        return lc($a) cmp lc($b);
+    }
+    else
+    {
+        return $a_i <=> $b_i
+    }
 }
 
 sub zone_row_builder
@@ -123,9 +152,9 @@ sub zone_row_builder
     my @channels;
     my @rx_freqs;
     my @tx_freqs;
-    foreach my $zone_details (@{$zone_record})
+    foreach my $zone_details (sort simple_sort @{$zone_record})
     {
-        my ($chan_name, $rx_freq, $tx_freq) = split("\t", $zone_details);  #TODO: don't use tabs...
+        my ($order, $chan_name, $rx_freq, $tx_freq) = split("\t", $zone_details);  #TODO: don't use tabs...
         $chan_name =~ s/\s+$//;   #TODO: This sort of trimming should live WAAAAY higher elsewhere
         push @channels, $chan_name;
         push @rx_freqs, $rx_freq;
@@ -161,8 +190,13 @@ sub write_scanlist_file
                    "Revert Channel", "Look Back Time A[s]", "Look Back Time B[s]", "Dropout Delay Time[s]", 
                    "Dwell Time[s]");
 
-    generate_csv_file($filename, \@headers, \%scanlist_config, \&scanlist_row_builder);
+    generate_csv_file($filename, \@headers, \%scanlist_config, \&scanlist_row_builder, \&simple_sort);
+}
 
+sub simple_sort
+{
+    # no fancy scanning rules here
+    return lc($a) cmp lc($b);
 }
 
 ## TODO: this is copy/paste from the zone_row_builder... dedupe this code, please
@@ -178,9 +212,9 @@ sub scanlist_row_builder
     my @channels;
     my @rx_freqs;
     my @tx_freqs;
-    foreach my $scan_details (@{$scan_record})
+    foreach my $scan_details (sort simple_sort @{$scan_record})
     {
-        my ($chan_name, $rx_freq, $tx_freq) = split("\t", $scan_details);  #TODO: don't use tabs...
+        my ($order, $chan_name, $rx_freq, $tx_freq) = split("\t", $scan_details);  #TODO: don't use tabs...
         $chan_name =~ s/\s+$//;   #TODO: This sort of trimming should live WAAAAY higher elsewhere
         push @channels, $chan_name;
         push @rx_freqs, $rx_freq;
@@ -220,7 +254,7 @@ sub write_talkgroup_file
 
     my @headers = ("No.", "Radio ID", "Name", "Country", "Remarks", "Call Type", "Call Alert");
 
-    generate_csv_file($filename, \@headers, \%talkgroup_config, \&talkgroup_row_builder);
+    generate_csv_file($filename, \@headers, \%talkgroup_config, \&talkgroup_row_builder, \&simple_sort);
 }
 
 sub talkgroup_row_builder
@@ -246,7 +280,7 @@ sub talkgroup_row_builder
 #####
 sub generate_csv_file
 {
-    my ($filename, $headers, $data, $row_func) = @_;
+    my ($filename, $headers, $data, $row_func, $sort_func) = @_;
 
     
     open(my $fh, ">$filename") or die("Couldn't open file '$filename': $!\n");
@@ -254,7 +288,7 @@ sub generate_csv_file
     $csv->print($fh, $headers);
 
     my $row_num = 1;
-    foreach my $key (sort keys %{$data})
+    foreach my $key (sort $sort_func keys %{$data})
     {
         my $value = $data->{$key};
         my $row = $row_func->($row_num, $key, $value);
@@ -436,9 +470,11 @@ sub read_talkgroups
 
     open(my $fh, $filename) or die("Couldn't open file '$filename': $!\n");
 
+    my $index = 1;
     for(my $line_no = 0; my $row = $csv->getline($fh); $line_no++)
     {
         $talkgroup_mapping{$row->[0]} = $row->[1];
+        $talkgroup_order{$row->[0]} = $index++;
     }
    
     close($fh); 
@@ -468,6 +504,7 @@ sub process_csv_file_with_header
 
     my @headers;
 
+    my $zone_order_index = 1;
     open(my $fh, $filename) or die("Couldn't open file '$filename': $!\n");
     for(my $line_no = 0; my $row = $csv->getline($fh); $line_no++)	
 	{
@@ -509,9 +546,8 @@ sub process_csv_file_with_header
                 # ... this is a hack and shouldn't live here =/
                 my $scanlist_name = $chan_config->{+CHAN_SCANLIST_NAME};
 
-                add_channel($out_fh, $chan_config, $zone_name, $scanlist_name);
+                add_channel($out_fh, $chan_config, $zone_name, $scanlist_name, $zone_order_default);
             }
-
 
             # matrixed CSV files... so iterate through each of the extra headers, which are the talk groups...
             for (my $col = scalar(@{$header_ref}); $col < scalar(@{$row}); $col++)
@@ -533,9 +569,10 @@ sub process_csv_file_with_header
                     my $scanlist_name = $chan_config->{+CHAN_CONTACT};
                     $chan_config->{+CHAN_SCANLIST_NAME} = $scanlist_name;
 
-                    add_channel($out_fh, $chan_config, $zone_name, $scanlist_name);
+                    add_channel($out_fh, $chan_config, $zone_name, $scanlist_name, $zone_order_index);
                 }
             }
+            $zone_order_index++;
         }
 	}
 }
@@ -543,7 +580,7 @@ sub process_csv_file_with_header
 
 sub add_channel
 {
-    my ($out_fh, $chan_config, $zone_name, $scanlist_name) = @_;
+    my ($out_fh, $chan_config, $zone_name, $scanlist_name, $zone_order_index) = @_;
 
     my @output;
 
@@ -571,7 +608,7 @@ sub add_channel
 
     $csv->print($out_fh, \@output);
 
-    build_zone_config(     $chan_config, $zone_name);
+    build_zone_config(     $chan_config, $zone_name, $zone_order_index);
     build_scanlist_config( $chan_config, $scanlist_name);
     build_talkgroup_config($chan_config);
 }
@@ -579,7 +616,7 @@ sub add_channel
 
 sub build_zone_config
 {
-    my ($chan_config, $zone_name) = @_;
+    my ($chan_config, $zone_name, $zone_order_index) = @_;
 
     my $chan_name = $chan_config->{+CHAN_NAME};
     my $rx_freq   = $chan_config->{+CHAN_RX_FREQ};
@@ -587,8 +624,12 @@ sub build_zone_config
     
     #print "adding channel '$chan_name' to zone '$zone_name'\n";
 
-    push @{$zone_config{$zone_name}}, join("\t", $chan_name, $rx_freq, $tx_freq);
+    $zone_order{$zone_name} = $zone_order_index;
+
+    my $order = channel_order_name($chan_config);
+    push @{$zone_config{$zone_name}}, join("\t", $order, $chan_name, $rx_freq, $tx_freq);
 }
+
 
 sub build_scanlist_config
 {
@@ -598,7 +639,8 @@ sub build_scanlist_config
     my $rx_freq   = $chan_config->{+CHAN_RX_FREQ};
     my $tx_freq   = $chan_config->{+CHAN_TX_FREQ};
 
-    push @{$scanlist_config{$scanlist_name}}, join("\t", $chan_name, $rx_freq, $tx_freq);
+    my $order = channel_order_name($chan_config);
+    push @{$scanlist_config{$scanlist_name}}, join("\t", $order, $chan_name, $rx_freq, $tx_freq);
 }
 
 
@@ -618,7 +660,24 @@ sub build_talkgroup_config
 }
 
 
+sub channel_order_name
+{
+    my ($chan_config) = @_;
 
+    my $index = $zone_order_default;
+    my $chan_name = $chan_config->{+CHAN_NAME};
+
+    if ($global_sort_mode ne 'alpha' && $chan_config->{+CHAN_MODE} eq VAL_DIGITAL)
+    {
+        if (defined($talkgroup_order{$chan_config->{+CHAN_CONTACT}}))
+        {
+            $index = $talkgroup_order{$chan_config->{+CHAN_CONTACT}};
+        }
+    }
+
+    return sprintf("%04d%s", $index, $chan_name);
+
+}
 
 
 #####
@@ -726,6 +785,15 @@ sub validate_zone
 	return _validate_string_length('Zone', $zone, 16);
 }
 
+sub validate_sort_mode
+{
+    my ($sort_order) = @_;
+
+    my %valid_sort_orders = ("alpha" => 1, "repeaters-first" => 1, "analog-first" => 1);
+
+    return _validate_membership($sort_order, \%valid_sort_orders, "Sort Order");
+}
+
 ####
 # Validation Helpers
 ####
@@ -779,8 +847,14 @@ sub _validate_string_length
 
 sub usage
 {
-    print "$0 --analog-csv=<analog.csv> --digital-others-csv=<digital-others.csv> "
-        . "--digital-repeaters-csv=<digital_repeaters.csv> --talkgroups-csv=<talkgroups.csv> "         
-        . "--output-directory=<output-directory> [--config=<config file>]\n";
+    print "$0 \n";
+    print "arguments:\n";
+    print "  --analog-csv=<analog.csv>  \n";
+    print "  --digital-others-csv=<digital-others.csv>\n";
+    print "  --digital-repeaters-csv=<digital_repeaters.csv> \n";
+    print "  --talkgroups-csv=<talkgroups.csv> \n";         
+    print "  --output-directory=<output-directory>\n";
+    print "  [--config=<config file>]\n";
+    print "  [--sorting=[alpha|repeaters-first|analog-first]\n";
     exit -1;
 }

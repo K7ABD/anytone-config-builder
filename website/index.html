@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>Anytone Config Builder</title>
+  <link rel="stylesheet" href="pandoc.css" type="text/css" />
+</head>
+<body>
+
+<h1>K7ABD's Anytone Config Builder</h1>
+
+Instructions are <a href="getting-started.html">here</a>
+
+<form action="config-builder.php" method="post" enctype="multipart/form-data">
+
+<h3>The Tool:</h3>
+Choose your files, hit upload!
+<table>
+<tr>
+<td>Analog CSV File</td>
+<td><input type="file" name="analog" id="analog"></td>
+</tr>
+<tr>
+<td>Digital-Others CSV File</td>
+<td><input type="file" name="digitalothers" id="digitalothers"></td>
+</tr>
+<tr>
+<td>Digital-Repeaters CSV File</td>
+<td><input type="file" name="digitalrepeaters" id="digitalrepeaters"></td>
+</tr>
+<tr>
+<td>Talkgroups CSV File</td>
+<td><input type="file" name="talkgroups" id="talkgroups"></td>
+</tr>
+</table>
+Zone/Talkgroup Sort Order: <select name="sort">
+    <option value="alpha" selected="selected">Alphabetize them for me</option>
+    <option value="repeaters-first">Use my sorting, DMR Repeaters as first zone</option>
+    <option value="analog-first">Use my sorting, Analog channels as first zone</option>
+</select>
+
+<br>
+<br>
+<input type="submit" value="Upload" name="Upload">
+</form>
+
+
+</body>
+</html>

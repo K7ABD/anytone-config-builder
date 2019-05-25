@@ -29,13 +29,16 @@ use constant {
 
 
 use constant {
-    VAL_DIGITAL     => 'D-Digital',
-    VAL_ANALOG      => 'A-Analog',
-    VAL_NO_TIME_SLOT => "-", # this is from the input CSV, not a Anytone-ism
+    VAL_DIGITAL          => 'D-Digital',
+    VAL_ANALOG           => 'A-Analog',
+    VAL_NO_TIME_SLOT     => "-", # this is from the input CSV, not a Anytone-ism
+    VAL_TX_PERMIT_SAME   => "Same Color Code",
+    VAL_TX_PERMIT_ALWAYS => "Always",
 };
 
 
 my $global_sort_mode = "alpha";
+my $global_hotspot_tx_permit = "same-color-code";
 
 my $global_channel_number = 1; 
 my %channel_csv_field_name;
@@ -551,6 +554,8 @@ sub process_csv_file_with_header
                     my $scanlist_name = $chan_config->{+CHAN_CONTACT};
                     $chan_config->{+CHAN_SCANLIST_NAME} = $scanlist_name;
 
+                    $chan_config->{+CHAN_TX_PERMIT} = tx_permit($chan_config);
+
                     add_channel($out_fh, $chan_config, $zone_name, $scanlist_name, $zone_order_index);
                 }
             }
@@ -660,7 +665,18 @@ sub channel_order_name
 }
 
 
+sub tx_permit
+{
+    my ($chan_config) = @_;
 
+    my $result = VAL_TX_PERMIT_SAME;
+    if($global_hotspot_tx_permit eq "always" && $chan_config->{+CHAN_RX_FREQ} eq $chan_config->{+CHAN_TX_FREQ})
+    {
+        $result = VAL_TX_PERMIT_ALWAYS;
+    }
+
+    return $result;
+}
 
 
 
@@ -785,6 +801,15 @@ sub validate_sort_mode
     return _validate_membership($sort_order, \%valid_sort_orders, "Sort Order");
 }
 
+sub validate_hotspot_mode
+{
+    my ($hotspot_mode) = @_;
+
+    my %valid_modes = ("always" => 1, "same-color-code" => 1);
+
+    return _validate_membership($hotspot_mode, \%valid_modes, "Hotspot TX Permit");
+}
+
 ####
 # Validation Helpers
 ####
@@ -859,7 +884,8 @@ sub handle_command_line_args
                "talkgroups-csv=s"         => \$talkgroups_filename,
                "config:s"                 => \$config_directory,
                "output-directory=s"       => \$output_directory,
-               "sorting:s"                => \$global_sort_mode,)
+               "sorting:s"                => \$global_sort_mode,
+               "hotspot-tx-permit:s"      => \$global_hotspot_tx_permit,)
         or usage();
 
     validate_sort_mode($global_sort_mode);
@@ -867,6 +893,8 @@ sub handle_command_line_args
     {
         $zone_order_default = 0;
     }
+
+    validate_hotspot_mode($global_hotspot_tx_permit);
 
     if (!defined($analog_filename) || !defined($digital_others_filename) || !defined($digital_repeaters_filename)
         || !defined($talkgroups_filename) || !defined($output_directory))
@@ -894,6 +922,7 @@ sub usage
     print "  --talkgroups-csv=<talkgroups.csv> \n";         
     print "  --output-directory=<output-directory>\n";
     print "  [--config=<config file>]\n";
-    print "  [--sorting=[alpha|repeaters-first|analog-first]\n";
+    print "  [--sorting=(alpha|repeaters-first|analog-first)]\n";
+    print "  [--hotspot-tx-permit=(always|same-color-code)]\n";
     exit -1;
 }

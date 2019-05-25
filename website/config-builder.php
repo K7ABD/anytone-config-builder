@@ -11,6 +11,7 @@ if(!isset($_FILES["analog"])) {
 
 
 $sort_order = validateSortOrder($_POST["sort"]);
+$hotspot_tx_permit = validateHotSpotTXPermit($_POST["hotspot"]);
 $analog  = fileValidation("Analog",            $_FILES["analog"]);
 $dmr_oth = fileValidation("Digital-Others",    $_FILES["digitalothers"]);
 $dmr_rep = fileValidation("Digital-Repeaters", $_FILES["digitalrepeaters"]);
@@ -21,7 +22,7 @@ $outdir = tempdir("dmr-output-");
 
 system("./anytone-config-builder.pl --analog-csv='$analog' "
      . "--digital-others-csv='$dmr_oth' --digital-repeaters-csv='$dmr_rep' --talkgroups-csv='$talkgrp' "
-     . "--output-directory='$outdir' --sorting=$sort_order 2>&1", $return);
+     . "--output-directory='$outdir' --sorting=$sort_order --hotspot-tx-permit=$hotspot_tx_permit 2>&1", $return);
 
 if ($return == 0)
 {
@@ -85,6 +86,18 @@ function validateSortOrder($sort_order)
     else
     {
         return 'alpha';
+    }
+}
+
+function validateHotSpotTXPermit($hotspot)
+{
+    if ($hotspot == "always" || $hotspot == "same-color-code")
+    {
+        return $hotspot;
+    }
+    else
+    {
+        return "same-color-code";
     }
 }
 ?>

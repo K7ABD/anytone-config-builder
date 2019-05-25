@@ -56,37 +56,8 @@ exit 0;
 
 sub main
 {
-    my ($analog_filename, $digital_others_filename, $digital_repeaters_filename, $talkgroups_filename);
-    my ($config_directory, $output_directory);
-
-    # TODO: move this to a subroutine, where it belongs. 
-    # Handle Command-line arguments.
-    GetOptions("analog-csv=s"             => \$analog_filename,
-               "digital-others-csv=s"     => \$digital_others_filename,
-               "digital-repeaters-csv=s"  => \$digital_repeaters_filename,
-               "talkgroups-csv=s"         => \$talkgroups_filename,
-               "config:s"                 => \$config_directory,
-               "output-directory=s"       => \$output_directory,
-               "sorting:s"                => \$global_sort_mode,)
-        or usage();
-
-    validate_sort_mode($global_sort_mode);
-    if ($global_sort_mode eq "analog-first")
-    {
-        $zone_order_default = 0;
-    }
-
-    if (!defined($analog_filename) || !defined($digital_others_filename) || !defined($digital_repeaters_filename)
-        || !defined($talkgroups_filename) || !defined($output_directory))
-    {
-        usage();
-    }
-
-    if (!defined($config_directory))
-    {
-        $config_directory = "config";
-    }
-
+    my ($analog_filename, $digital_others_filename, $digital_repeaters_filename, $talkgroups_filename,
+        $config_directory, $output_directory) = handle_command_line_args();
 
     $csv = Text::CSV_XS->new({binary => 1, auto_diag => 1, always_quote => 1, eol => "\r\n"});
 
@@ -633,8 +604,6 @@ sub build_zone_config
     my $rx_freq   = $chan_config->{+CHAN_RX_FREQ};
     my $tx_freq   = $chan_config->{+CHAN_TX_FREQ};
     
-    #print "adding channel '$chan_name' to zone '$zone_name'\n";
-
     $zone_order{$zone_name} = $zone_order_index;
 
     my $order = channel_order_name($chan_config);
@@ -713,6 +682,7 @@ sub validate_bandwidth
 
     return _validate_membership($mode, \%valid_modes, "Analog Mode");
 }
+
 sub validate_call_type
 {
     my ($call_type) = @_;
@@ -864,6 +834,54 @@ sub _validate_string_length
 
     return $string;
 }
+
+
+
+
+
+
+################################################################################
+################################################################################
+################################################################################
+##########   GENERIC STUFF: usage(), command-line args, etc
+################################################################################
+################################################################################
+################################################################################
+sub handle_command_line_args
+{
+    my ($analog_filename, $digital_others_filename, $digital_repeaters_filename, $talkgroups_filename);
+    my ($config_directory, $output_directory);
+
+    GetOptions("analog-csv=s"             => \$analog_filename,
+               "digital-others-csv=s"     => \$digital_others_filename,
+               "digital-repeaters-csv=s"  => \$digital_repeaters_filename,
+               "talkgroups-csv=s"         => \$talkgroups_filename,
+               "config:s"                 => \$config_directory,
+               "output-directory=s"       => \$output_directory,
+               "sorting:s"                => \$global_sort_mode,)
+        or usage();
+
+    validate_sort_mode($global_sort_mode);
+    if ($global_sort_mode eq "analog-first")
+    {
+        $zone_order_default = 0;
+    }
+
+    if (!defined($analog_filename) || !defined($digital_others_filename) || !defined($digital_repeaters_filename)
+        || !defined($talkgroups_filename) || !defined($output_directory))
+    {
+        usage();
+    }
+
+    if (!defined($config_directory))
+    {
+        $config_directory = "config";
+    }
+
+    return ($analog_filename, $digital_others_filename, $digital_repeaters_filename, $talkgroups_filename,
+            $config_directory, $output_directory);
+}
+
 
 sub usage
 {

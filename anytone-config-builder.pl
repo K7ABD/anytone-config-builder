@@ -107,6 +107,14 @@ sub main
 }
 
 
+################################################################################
+################################################################################
+################################################################################
+##########   CSV OUTPUT ROUTINES
+################################################################################
+################################################################################
+################################################################################
+
 #####
 ##### Zone file output #####
 #####
@@ -123,61 +131,6 @@ sub write_zone_file
 
 }
 
-sub zone_sort
-{
-    my $a_i = $zone_order{$a};
-    my $b_i = $zone_order{$b};
-
-    # If we're in alphabetical mode or if the zone indexes are the same (which will be the case if we're in
-    # non-alphabetical mode for the analog and digital-other channels).
-    if ($global_sort_mode eq 'alpha' or $a_i == $b_i)
-    {
-        return lc($a) cmp lc($b);
-    }
-    else
-    {
-        return $a_i <=> $b_i
-    }
-}
-
-sub zone_row_builder
-{
-    my ($zone_number, $zone_name, $zone_record) = @_;
-
-    my @values;
-
-    push @values, $zone_number;
-    push @values, $zone_name;
-
-    my @channels;
-    my @rx_freqs;
-    my @tx_freqs;
-    foreach my $zone_details (sort case_insensitive_sort @{$zone_record})
-    {
-        my ($order, $chan_name, $rx_freq, $tx_freq) = split("\t", $zone_details);  #TODO: don't use tabs...
-        $chan_name =~ s/\s+$//;   #TODO: This sort of trimming should live WAAAAY higher elsewhere
-        push @channels, $chan_name;
-        push @rx_freqs, $rx_freq;
-        push @tx_freqs, $tx_freq;
-    }        
-
-    push @values, join("|", @channels);
-    push @values, join("|", @rx_freqs);
-    push @values, join("|", @tx_freqs);
-    push @values, $channels[0];
-    push @values, $rx_freqs[0];
-    push @values, $tx_freqs[0];
-    push @values, $channels[0];
-    push @values, $rx_freqs[0];
-    push @values, $tx_freqs[0];
-
-    return \@values;
-}
-
-
-#####
-##### Scanlist file output #####
-#####
 sub write_scanlist_file
 {
     my ($filename) = @_;
@@ -193,61 +146,7 @@ sub write_scanlist_file
     generate_csv_file($filename, \@headers, \%scanlist_config, \&scanlist_row_builder, \&case_insensitive_sort);
 }
 
-sub case_insensitive_sort
-{
-    # no fancy scanning rules here
-    return lc($a) cmp lc($b);
-}
 
-## TODO: this is copy/paste from the zone_row_builder... dedupe this code, please
-sub scanlist_row_builder
-{
-    my ($scan_number, $scan_name, $scan_record) = @_;
-
-    my @values;
-
-    push @values, $scan_number;
-    push @values, $scan_name;
-
-    my @channels;
-    my @rx_freqs;
-    my @tx_freqs;
-    foreach my $scan_details (sort case_insensitive_sort @{$scan_record})
-    {
-        my ($order, $chan_name, $rx_freq, $tx_freq) = split("\t", $scan_details);  #TODO: don't use tabs...
-        $chan_name =~ s/\s+$//;   #TODO: This sort of trimming should live WAAAAY higher elsewhere
-        push @channels, $chan_name;
-        push @rx_freqs, $rx_freq;
-        push @tx_freqs, $tx_freq;
-    }        
-
-    push @values, join("|", @channels);
-    push @values, join("|", @rx_freqs);
-    push @values, join("|", @tx_freqs);
-    push @values, "Off";
-    push @values, "Off";
-    push @values, "";
-    push @values, "";
-    push @values, "Off";
-    push @values, "";
-    push @values, "";
-    push @values, "Selected";
-    push @values, "0.5";
-    push @values, "0.5";
-    push @values, "0.1";
-    push @values, "0.1";
-
-    return \@values;
-}
-
-
-
-
-
-
-#####
-##### Talkgroup file output
-#####
 sub write_talkgroup_file
 {
     my ($filename) = @_;
@@ -256,6 +155,23 @@ sub write_talkgroup_file
 
     generate_csv_file($filename, \@headers, \%talkgroup_config, \&talkgroup_row_builder, \&case_insensitive_sort);
 }
+
+
+sub zone_row_builder
+{
+    my ($zone_number, $zone_name, $zone_record) = @_;
+
+    return generic_row_builder($zone_number, $zone_name, $zone_record, \&zone_row_details);
+}
+
+
+sub scanlist_row_builder
+{
+    my ($scan_number, $scan_name, $scan_record) = @_;
+
+    return generic_row_builder($scan_number, $scan_name, $scan_record, \&scanlist_row_details);
+}
+
 
 sub talkgroup_row_builder
 {
@@ -275,6 +191,67 @@ sub talkgroup_row_builder
 }
 
 
+sub generic_row_builder
+{
+    my ($row_number, $row_name, $row_record, $row_func) = @_;
+
+    my @values;
+
+    push @values, $row_number;
+    push @values, $row_name;
+
+    my @channels;
+    my @rx_freqs;
+    my @tx_freqs;
+    foreach my $row_details (sort case_insensitive_sort @{$row_record})
+    {
+        my ($order, $chan_name, $rx_freq, $tx_freq) = split("\t", $row_details);
+        $chan_name =~ s/\s+$//;   #TODO: This sort of trimming should live WAAAAY higher elsewhere
+        push @channels, $chan_name;
+        push @rx_freqs, $rx_freq;
+        push @tx_freqs, $tx_freq;
+    }        
+
+    push @values, join("|", @channels);
+    push @values, join("|", @rx_freqs);
+    push @values, join("|", @tx_freqs);
+    $row_func->(\@values, $channels[0], $rx_freqs[0], $tx_freqs[0]);
+    return \@values;
+}
+
+
+sub zone_row_details
+{
+    my ($values_ref, $channel0, $rx0, $tx0) = @_;
+
+    push @{$values_ref}, $channel0;
+    push @{$values_ref}, $rx0;
+    push @{$values_ref}, $tx0;
+    push @{$values_ref}, $channel0;
+    push @{$values_ref}, $rx0;
+    push @{$values_ref}, $tx0;
+}
+
+
+sub scanlist_row_details
+{
+    my ($values_ref, $channel0, $rx0, $tx0) = @_;
+
+    push @{$values_ref}, "Off";
+    push @{$values_ref}, "Off";
+    push @{$values_ref}, "";
+    push @{$values_ref}, "";
+    push @{$values_ref}, "Off";
+    push @{$values_ref}, "";
+    push @{$values_ref}, "";
+    push @{$values_ref}, "Selected";
+    push @{$values_ref}, "0.5";
+    push @{$values_ref}, "0.5";
+    push @{$values_ref}, "0.1";
+    push @{$values_ref}, "0.1";
+}
+
+
 #####
 #####  Generic CSV file writer given a hash of data
 #####
@@ -282,7 +259,6 @@ sub generate_csv_file
 {
     my ($filename, $headers, $data, $row_func, $sort_func) = @_;
 
-    
     open(my $fh, ">$filename") or die("Couldn't open file '$filename': $!\n");
 
     $csv->print($fh, $headers);
@@ -302,7 +278,6 @@ sub generate_csv_file
 }
 
 
-
 sub print_channel_header
 {
     my ($out_fh) = @_;
@@ -317,6 +292,42 @@ sub print_channel_header
 }
 
 
+##########
+####  Sort Functions
+##########
+sub zone_sort
+{
+    my $a_i = $zone_order{$a};
+    my $b_i = $zone_order{$b};
+
+    # If we're in alphabetical mode or if the zone indexes are the same (which will be the case if we're in
+    # non-alphabetical mode for the analog and digital-other channels).
+    if ($global_sort_mode eq 'alpha' or $a_i == $b_i)
+    {
+        return lc($a) cmp lc($b);
+    }
+    else
+    {
+        return $a_i <=> $b_i
+    }
+}
+
+
+sub case_insensitive_sort
+{
+    # no fancy scanning rules here
+    return lc($a) cmp lc($b);
+}
+
+
+
+################################################################################
+################################################################################
+################################################################################
+##########   CSV INPUT ROUTINES
+################################################################################
+################################################################################
+################################################################################
 
 
 
@@ -680,9 +691,19 @@ sub channel_order_name
 }
 
 
-#####
-# Data Validation routines... let's try to keep anytone happy and whoever is running this sane.
-#####
+
+
+
+
+
+
+################################################################################
+################################################################################
+################################################################################
+##########   DATA VALIDATION ROUTINES
+################################################################################
+################################################################################
+################################################################################
 
 sub validate_bandwidth
 {

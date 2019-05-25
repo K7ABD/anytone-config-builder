@@ -718,6 +718,7 @@ sub validate_ctcss
 {
     my ($ctcss) = @_;
     return $ctcss if ($ctcss eq 'Off');
+    return $ctcss if ($ctcss =~ /D[0-9A-Za-z]+/ && length($ctcss) < 10); # DCS tones, could be smarter
     return _validate_num_in_range('CTCSS/DCS', $ctcss, 0, 300); # this could be smarter
 }
 

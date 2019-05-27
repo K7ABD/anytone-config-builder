@@ -29,11 +29,13 @@ use constant {
 
 
 use constant {
-    VAL_DIGITAL          => 'D-Digital',
-    VAL_ANALOG           => 'A-Analog',
-    VAL_NO_TIME_SLOT     => "-", # this is from the input CSV, not a Anytone-ism
-    VAL_TX_PERMIT_SAME   => "Same Color Code",
-    VAL_TX_PERMIT_ALWAYS => "Always",
+    VAL_DIGITAL           => 'D-Digital',
+    VAL_ANALOG            => 'A-Analog',
+    VAL_NO_TIME_SLOT      => "-", # this is from the input CSV, not a Anytone-ism
+    VAL_TX_PERMIT_SAME    => "Same Color Code",
+    VAL_TX_PERMIT_ALWAYS  => "Always",
+    VAL_CALL_TYPE_GROUP   => "Group Call",
+    VAL_CALL_TYPE_PRIVATE => "Private Call",
 };
 
 
@@ -420,9 +422,11 @@ sub dmr_repeater_csv_field_extractor
 
 sub dmr_repeater_csv_matrix_extractor
 {
-    my ($chan_config, $contact, $timeslot) = @_;
+    my ($chan_config, $contact, $value) = @_;
     
     my $do_multiply = 0;
+
+    my ($timeslot, $call_type) = handle_repeater_value($value);
 
     $timeslot = validate_timeslot($timeslot);
     if ($timeslot ne VAL_NO_TIME_SLOT)
@@ -430,6 +434,7 @@ sub dmr_repeater_csv_matrix_extractor
         $chan_config->{+CHAN_CONTACT}   = validate_contact($contact);
         $chan_config->{+CHAN_TIME_SLOT} = validate_timeslot($timeslot);
         $chan_config->{+CHAN_NAME}      = validate_channel_name($contact);
+        $chan_config->{+CHAN_CALL_TYPE} = validate_call_type($call_type);
         $do_multiply = 1;
     }
 
@@ -690,6 +695,22 @@ sub tx_permit
 }
 
 
+sub handle_repeater_value
+{
+    my ($value) = @_;
+
+    my @subvalues = split(';', $value);
+
+    my $timeslot = shift(@subvalues);
+
+    my $call_type = VAL_CALL_TYPE_GROUP;
+    foreach my $v (@subvalues)
+    {
+        $call_type = VAL_CALL_TYPE_PRIVATE if ($v eq "P");
+    }
+
+    return ($timeslot, $call_type);
+}
 
 
 

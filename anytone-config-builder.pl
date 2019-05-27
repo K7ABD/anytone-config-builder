@@ -52,6 +52,7 @@ my %talkgroup_config;
 my %talkgroup_order;
 my $csv;
 
+
 main();
 exit 0;
 
@@ -135,7 +136,7 @@ sub zone_row_builder
 {
     my ($zone_number, $zone_name, $zone_record) = @_;
 
-    return generic_row_builder($zone_number, $zone_name, $zone_record, \&zone_row_details);
+    return generic_row_builder($zone_number, $zone_name, $zone_record, \&zone_row_details, -1, "Zone");
 }
 
 
@@ -143,7 +144,7 @@ sub scanlist_row_builder
 {
     my ($scan_number, $scan_name, $scan_record) = @_;
 
-    return generic_row_builder($scan_number, $scan_name, $scan_record, \&scanlist_row_details);
+    return generic_row_builder($scan_number, $scan_name, $scan_record, \&scanlist_row_details, 50, "Scanlist");
 }
 
 
@@ -167,7 +168,7 @@ sub talkgroup_row_builder
 
 sub generic_row_builder
 {
-    my ($row_number, $row_name, $row_record, $row_func) = @_;
+    my ($row_number, $row_name, $row_record, $row_func, $row_limit, $warning_name) = @_;
 
     my @values;
 
@@ -177,13 +178,23 @@ sub generic_row_builder
     my @channels;
     my @rx_freqs;
     my @tx_freqs;
+    my $i = 0;
     foreach my $row_details (sort case_insensitive_sort @{$row_record})
     {
         my ($order, $chan_name, $rx_freq, $tx_freq) = split("\t", $row_details);
         $chan_name =~ s/\s+$//;   #TODO: This sort of trimming should live WAAAAY higher elsewhere
+
+        if ($row_limit > 0 && $i >= $row_limit)
+        {
+            warning("$warning_name '$row_name' has more than $row_limit channels. " .
+                    "It has been truncated to the first $row_limit channels to keep the CPS software happy.");
+            last;
+        }
+
         push @channels, $chan_name;
         push @rx_freqs, $rx_freq;
         push @tx_freqs, $tx_freq;
+        $i++;
     }        
 
     push @values, join("|", @channels);
@@ -539,7 +550,7 @@ sub process_csv_file_with_header
             {
                 if (!defined($matrix_field_extractor))
                 {
-                    error("There are too many columns in $file_nickname file.\n");
+                    error("There are too many columns in '$filename'.\n");
                 }
                 my ($do_matrix, $chan_config) = $matrix_field_extractor->($chan_config, $headers[$col], $row->[$col]);
 
@@ -933,4 +944,11 @@ sub error
 
     print "ERROR: $error";
     exit -1;
+}
+
+sub warning
+{
+    my ($message) = @_;
+
+    print "WARNING: $message\n";
 }

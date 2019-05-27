@@ -8,7 +8,7 @@ if(!isset($_FILES["analog"])) {
 }
 
 
-
+print_html_start();
 
 $sort_order = validateSortOrder($_POST["sort"]);
 $hotspot_tx_permit = validateHotSpotTXPermit($_POST["hotspot"]);
@@ -20,29 +20,31 @@ $talkgrp = fileValidation("TalkGroups",        $_FILES["talkgroups"]);
 $outdir = tempdir("dmr-output-");
 
 
-system("./anytone-config-builder.pl --analog-csv='$analog' "
+exec("./anytone-config-builder.pl --analog-csv='$analog' "
      . "--digital-others-csv='$dmr_oth' --digital-repeaters-csv='$dmr_rep' --talkgroups-csv='$talkgrp' "
-     . "--output-directory='$outdir' --sorting=$sort_order --hotspot-tx-permit=$hotspot_tx_permit 2>&1", $return);
+     . "--output-directory='$outdir' --sorting=$sort_order --hotspot-tx-permit=$hotspot_tx_permit 2>&1", 
+     $output, $return);
+
+
+foreach($output as $line)
+{
+    if (preg_match('/^WARNING: (.*)/', $line, $matches))
+    {
+        print_html_div("WARNING", "#FFFFBB", $matches[1]);
+    }
+    elseif (preg_match('/^ERROR: (.*)/', $line, $matches))
+    {
+        print_html_div("ERROR", "#FFDDDD", $matches[1]);
+    }
+}
+
 
 if ($return == 0)
 {
-    exec("zip -jr $outdir.zip $outdir/");
-
-    header("Pragma: public");
-    header("Expires: 0");
-    header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-    header("Cache-Control: public");
-    header("Content-Description: File Transfer");
-    header("Content-type: application/octet-stream");
-    header("Content-Disposition: attachment; filename=\"anytone.zip\"");
-    header("Content-Transfer-Encoding: binary");
-    header("Content-Length: ".filesize("$outdir.zip"));
-    ob_end_flush();
-    @readfile("$outdir.zip");
-    unlink("$outdir.zip");
+    print_html_div("SUCCESS", "#DDFFDD", "It worked!  Your files should be downloading now.");
+    print "<iframe style='display:none;' src='download.php?name=$outdir'></iframe>";
 }
 
-exec("rm -rf $outdir");
 
 function fileValidation($description, $file_details)
 {
@@ -52,13 +54,11 @@ function fileValidation($description, $file_details)
 
     if ($size == 0)
     {
-        print "$description file is empty... did you forget to select it?";
-        exit();
+        fatal("$description file is empty... did you forget to upload it?");
     }
     if ($size > (1024*1024))
     {
-        print "$description file is > 1MB.  That's bigger than I'm cool with :D";
-        exit();
+        fatal("$description file is > 1MB.  That's bigger than I'm cool with :D");
     }
 
     return $tmp_name;
@@ -99,5 +99,38 @@ function validateHotSpotTXPermit($hotspot)
     {
         return "same-color-code";
     }
+}
+
+function fatal($message)
+{
+    print_html_div("ERROR", "#FFDDDD", $message);
+    print_html_end();
+}
+
+
+function print_html_start()
+{
+?>
+<html>
+<head>
+<title>Anytone Config Builder</title>
+  <link rel="stylesheet" href="pandoc.css" type="text/css" />
+</head>
+<body>
+
+<h1>K7ABD's Anytone Config Builder</h1>
+
+<?php
+}
+
+function print_html_div($description, $color, $message)
+{
+    print "$description:<div style='background-color:$color; border: 1px solid #888888; padding: 5px; margin-top: 0px; margin-bottom: 5px;'>$message</div>";
+}
+
+function print_html_end()
+{
+    print "</body></html>";
+    exit(0);
 }
 ?>

@@ -67,7 +67,7 @@ sub main
     read_talkgroups($talkgroups_filename);
     read_channel_csv_default( "$config_directory/channel-defaults.csv");
 
-    open (my $fh, '>', "$output_directory/channels.csv") or die("Couldn't open channels.csv for writing\n");
+    open (my $fh, '>', "$output_directory/channels.csv") or error("Couldn't open channels.csv for writing\n");
     print_channel_header($fh);
     process_dmr_others_file(  $fh, $digital_others_filename);
     process_dmr_repeater_file($fh, $digital_repeaters_filename);
@@ -233,7 +233,7 @@ sub generate_csv_file
 {
     my ($filename, $headers, $data, $row_func, $sort_func) = @_;
 
-    open(my $fh, ">$filename") or die("Couldn't open file '$filename': $!\n");
+    open(my $fh, ">$filename") or error("Couldn't open file '$filename': $!\n");
 
     $csv->print($fh, $headers);
 
@@ -248,7 +248,7 @@ sub generate_csv_file
         $row_num++;
     }
 
-    close($fh) or die("Couldn't close file '$filename': $!\n");
+    close($fh) or error("Couldn't close file '$filename': $!\n");
 }
 
 
@@ -437,7 +437,7 @@ sub read_channel_csv_default
 {
     my ($filename) = @_;
 
-    open(my $fh, $filename) or die("Couldn't open file '$filename': $!\n");
+    open(my $fh, $filename) or error("Couldn't open file '$filename': $!\n");
 
     for(my $line_no = 0; my $row = $csv->getline($fh); $line_no++)
     {
@@ -453,7 +453,7 @@ sub read_talkgroups
 {
     my ($filename) = @_;
 
-    open(my $fh, $filename) or die("Couldn't open file '$filename': $!\n");
+    open(my $fh, $filename) or error("Couldn't open file '$filename': $!\n");
 
     my $index = 1;
     for(my $line_no = 0; my $row = $csv->getline($fh); $line_no++)
@@ -490,7 +490,7 @@ sub process_csv_file_with_header
     my @headers;
 
     my $zone_order_index = 1;
-    open(my $fh, $filename) or die("Couldn't open file '$filename': $!\n");
+    open(my $fh, $filename) or error("Couldn't open file '$filename': $!\n");
     for(my $line_no = 0; my $row = $csv->getline($fh); $line_no++)	
 	{
 		# Make sure the header looks sane... it's an easy check, but it'll catch obvious mistakes
@@ -502,7 +502,7 @@ sub process_csv_file_with_header
 			{
 				if ($row->[$col] ne $header_ref->[$col])
 				{
-					die("CSV header does not match for $file_nickname file (found '" 
+					error("CSV header does not match for $file_nickname file (found '" 
                        . $row->[$col] ."' expected '" . $header_ref->[$col] . "')\n");
 				}
                 push @headers, $row->[$col];
@@ -539,7 +539,7 @@ sub process_csv_file_with_header
             {
                 if (!defined($matrix_field_extractor))
                 {
-                    die("There are too many columns in '$filename'.\n");
+                    error("There are too many columns in $file_nickname file.\n");
                 }
                 my ($do_matrix, $chan_config) = $matrix_field_extractor->($chan_config, $headers[$col], $row->[$col]);
 
@@ -587,7 +587,7 @@ sub add_channel
 
         if ($value eq "REQUIRED")
         {
-            die("I need a value for '" . $channel_csv_field_name{$index} . "'\n");
+            error("I need a value for '" . $channel_csv_field_name{$index} . "'\n");
         }
 
         push @output, $value; 
@@ -638,7 +638,7 @@ sub build_talkgroup_config
 
     if (!defined($talkgroup_mapping{$talkgroup}))
     {
-        die("Talkgroup '$talkgroup' is referenced by not defined in the talkgroup CSV file\n");
+        error("Talkgroup '$talkgroup' is referenced by not defined in the talkgroup CSV file\n");
     }
 
     $talkgroup_config{$talkgroup} = 1;
@@ -823,7 +823,7 @@ sub _validate_membership
         $error  = "Invalid $error: ";
         $error .= "'$value' is not one of: ";
         $error .= join(", ", keys %{$set_ref}) . "\n";
-        die($error);
+        error($error);
     }
 
     return $value;
@@ -835,7 +835,7 @@ sub _validate_num_in_range
 
     if (!looks_like_number($value) || $value < $min || $value > $max)
     {
-        die("Invalid $type: '$value' must be an number between $min and $max (inclusive)\n");
+        error("Invalid $type: '$value' must be an number between $min and $max (inclusive)\n");
     }
 
     return $value;
@@ -855,7 +855,7 @@ sub _validate_string_length
 
 	if(length($string) > $length)
 	{
-		die("Invalid $type: '$string' is more than $length characters\n");
+		error("Invalid $type: '$string' is more than $length characters\n");
 	}
 
     return $string;
@@ -924,5 +924,13 @@ sub usage
     print "  [--config=<config file>]\n";
     print "  [--sorting=(alpha|repeaters-first|analog-first)]\n";
     print "  [--hotspot-tx-permit=(always|same-color-code)]\n";
+    exit -1;
+}
+
+sub error
+{
+    my ($error) = @_;
+
+    print "ERROR: $error";
     exit -1;
 }

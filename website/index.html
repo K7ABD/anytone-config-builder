@@ -6,12 +6,15 @@
 <body>
 
 <h1>K7ABD's Anytone Config Builder</h1>
+<p>This is a tool to make building codeplugs easier.</p>
 
-Instructions are <a href="getting-started.html">here</a>
-
+Be sure to check out the [<a href="getting-started.html">Getting Started Guide</a>].<br>
+<br>
+<div style='border: 1px solid #888888; padding: 5px'>
 <form action="config-builder.php" method="post" enctype="multipart/form-data">
 
-<h3>The Tool:</h3>
+<font size="+1"><b>The Tool:</b></font>
+<br>
 Choose your files, hit upload!
 <table>
 <tr>
@@ -31,6 +34,7 @@ Choose your files, hit upload!
 <td><input type="file" name="talkgroups" id="talkgroups"></td>
 </tr>
 </table>
+<b>Advanced Options:</b> [<a href="advanced-options.html">help</a>]<br>
 Zone/Talkgroup Sort Order: <select name="sort">
     <option value="alpha" selected="selected">Alphabetize them for me</option>
     <option value="repeaters-first">Use my sorting, DMR Repeaters as first zone</option>
@@ -42,12 +46,12 @@ TX Permit setting for Hotspots: <select name="hotspot">
     <option value="always">Always</option>
 </select>
 
-
 <br>
 <br>
 <input type="submit" value="Upload" name="Upload">
 </form>
+</div>
 
-
+<p> Not working for you?  Email me: k7abd@arrl.net.</p>
 </body>
 </html>

@@ -49,6 +49,7 @@ my %talkgroup_mapping;
 my %zone_config;
 my %zone_order;
 my $zone_order_default = 9999; # this impacts where the analog and digital-others go.
+my $analog_channel_index = 0;
 my %scanlist_config;
 my %talkgroup_config;
 my %talkgroup_order;
@@ -665,18 +666,26 @@ sub channel_order_name
 {
     my ($chan_config) = @_;
 
-    my $index = $zone_order_default;
+    my $index1 = $zone_order_default;
+    my $index2 = 0;
     my $chan_name = $chan_config->{+CHAN_NAME};
 
-    if ($global_sort_mode ne 'alpha' && $chan_config->{+CHAN_MODE} eq VAL_DIGITAL)
+    if ($global_sort_mode ne 'alpha' )
     {
-        if (defined($talkgroup_order{$chan_config->{+CHAN_CONTACT}}))
+        if ($chan_config->{+CHAN_MODE} eq VAL_DIGITAL)
         {
-            $index = $talkgroup_order{$chan_config->{+CHAN_CONTACT}};
+            if (defined($talkgroup_order{$chan_config->{+CHAN_CONTACT}}))
+            {
+                $index1 = $talkgroup_order{$chan_config->{+CHAN_CONTACT}};
+            }
+        }
+        elsif ($chan_config->{+CHAN_MODE} eq VAL_ANALOG)
+        {
+            $index2 = $analog_channel_index++;
         }
     }
 
-    return sprintf("%04d%s", $index, $chan_name);
+    return sprintf("%04d%04d%s", $index1, $index2, $chan_name);
 
 }
 

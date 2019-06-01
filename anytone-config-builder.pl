@@ -21,6 +21,7 @@ use constant {
     CHAN_CONTACT        => 9,
     CHAN_CALL_TYPE      => 10,
     CHAN_TX_PERMIT      => 12,
+    CHAN_SQUELCH_MODE   => 13,
     CHAN_COLOR_CODE     => 19,
     CHAN_TIME_SLOT      => 20,
     CHAN_SCANLIST_NAME  => 21,
@@ -36,6 +37,7 @@ use constant {
     VAL_TX_PERMIT_ALWAYS  => "Always",
     VAL_CALL_TYPE_GROUP   => "Group Call",
     VAL_CALL_TYPE_PRIVATE => "Private Call",
+    VAL_CTCSS_DCS         => "CTCSS/DCS",
 };
 
 
@@ -348,6 +350,11 @@ sub analog_csv_field_extractor
     $chan_config{+CHAN_CTCSS_ENC}       = validate_ctcss(       $row->[7]);
     $chan_config{+CHAN_TX_PROHIBIT}     = validate_tx_prohibit( $row->[8]);
     $chan_config{+CHAN_MODE}            = VAL_ANALOG;
+
+    if ($chan_config{+CHAN_CTCSS_DEC} ne "Off")
+    {
+        $chan_config{+CHAN_SQUELCH_MODE} = VAL_CTCSS_DCS;
+    }
 
     return \%chan_config;
 }

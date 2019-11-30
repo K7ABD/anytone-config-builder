@@ -44,6 +44,8 @@ use constant {
 my $global_sort_mode = "alpha";
 my $global_hotspot_tx_permit = "same-color-code";
 
+my $global_line_number = 0;
+my $global_file_name   = '';
 my $global_channel_number = 1; 
 my %channel_csv_field_name;
 my %channel_csv_default_value;
@@ -513,10 +515,13 @@ sub process_csv_file_with_header
 
     my @headers;
 
+    $global_file_name = $file_nickname;
+
     my $zone_order_index = 1;
     open(my $fh, $filename) or error("Couldn't open file '$filename': $!\n");
     for(my $line_no = 0; my $row = $csv->getline($fh); $line_no++)	
 	{
+        $global_line_number = $line_no;
 		# Make sure the header looks sane... it's an easy check, but it'll catch obvious mistakes
 		if ($line_no == 0)
 		{
@@ -870,7 +875,8 @@ sub _validate_membership
     {
         $error  = "Invalid $error: ";
         $error .= "'$value' is not one of: ";
-        $error .= join(", ", keys %{$set_ref}) . "\n";
+        $error .= join(", ", keys %{$set_ref});
+        $error .= _file_and_line();
         error($error);
     }
 
@@ -883,7 +889,7 @@ sub _validate_num_in_range
 
     if (!looks_like_number($value) || $value < $min || $value > $max)
     {
-        error("Invalid $type: '$value' must be an number between $min and $max (inclusive)\n");
+        error("Invalid $type: '$value' must be an number between $min and $max (inclusive)" . _file_and_line());
     }
 
     return $value;
@@ -903,14 +909,16 @@ sub _validate_string_length
 
 	if(length($string) > $length)
 	{
-		error("Invalid $type: '$string' is more than $length characters\n");
+		error("Invalid $type: '$string' is more than $length characters" . _file_and_line());
 	}
 
     return $string;
 }
 
-
-
+sub _file_and_line
+{
+    return " [On line #$global_line_number of $global_file_name file.]\n";
+}
 
 
 

@@ -17,3 +17,10 @@ Some hotspot owners would prefer a TX Permit setting of "Always" when they're us
 **Same Color Code** - This is the default option; all Digital Repeater channels have the TX Permit setting of "Same Color Code"
 
 **Always** - For every Digital Repeater which has the same TX and RX Frequency, the TX Permit setting will be set to "Always".
+
+## Digital Repeater Nicknames
+Some people prefer to have their channel names indicate which repeater they're using.  This feature allows you to prepend or append each channel name from the Digital Repeaters file with a prefix or suffix (at your choosing).
+
+To use this, add a nickname to each of the zones in the Digital Repeates file, like so:  "Full Zone Name;FZN" or "Olympia/Cap Pk.;OLY".  If you select eithe "prefix" or "suffix" for Digital Repeater Nicknames, the tool will create channel names that include your nickname.
+
+Additionally, because some talkgroups have long names and the Anytone radios support only 16 character channel names, you can also provide a shortened name for your talkgroups in a similar manner.  For example, "Worldwide English" might become "Worldwide English;WW English" leaving enough room for your prefix/suffix.

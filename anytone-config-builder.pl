@@ -26,6 +26,7 @@ use constant {
     CHAN_TIME_SLOT      => 20,
     CHAN_SCANLIST_NAME  => 21,
     CHAN_TX_PROHIBIT    => 23,
+    ACB_ZONE_NICKNAME   => 1000,
 };
 
 
@@ -38,14 +39,16 @@ use constant {
     VAL_CALL_TYPE_GROUP   => "Group Call",
     VAL_CALL_TYPE_PRIVATE => "Private Call",
     VAL_CTCSS_DCS         => "CTCSS/DCS",
+    LENGTH_CHAN_NAME      => 16,
 };
 
 
 my $global_sort_mode = "alpha";
 my $global_hotspot_tx_permit = "same-color-code";
+my $global_nickname_mode = "off";
 
 my $global_line_number = 0;
-my $global_file_name   = '';
+my $global_file_name   = 'none';
 my $global_channel_number = 1; 
 my %channel_csv_field_name;
 my %channel_csv_default_value;
@@ -419,7 +422,11 @@ sub dmr_repeater_csv_field_extractor
     my ($row) = @_;
 
     my %chan_config;
-    $chan_config{+CHAN_SCANLIST_NAME}   = validate_zone(       $row->[0]);
+
+    my ($zone_full, $zone_nick) = handle_nickname_values($row->[0]);
+
+    $chan_config{+CHAN_SCANLIST_NAME}   = validate_zone(       $zone_full);
+    $chan_config{+ACB_ZONE_NICKNAME}    = validate_zone(       $zone_nick);
                                                              # $row->[1] is a comment column
     $chan_config{+CHAN_POWER}           = validate_power(      $row->[2]);
     $chan_config{+CHAN_RX_FREQ}         = validate_freq(       $row->[3]);
@@ -441,9 +448,13 @@ sub dmr_repeater_csv_matrix_extractor
     $timeslot = validate_timeslot($timeslot);
     if ($timeslot ne VAL_NO_TIME_SLOT)
     { 
+        my ($contact, $chan_nick) = handle_nickname_values($contact);
+
+        my $chan_name = make_channel_name($chan_config->{+ACB_ZONE_NICKNAME}, $contact, $chan_nick);
+
         $chan_config->{+CHAN_CONTACT}   = validate_contact($contact);
         $chan_config->{+CHAN_TIME_SLOT} = validate_timeslot($timeslot);
-        $chan_config->{+CHAN_NAME}      = validate_channel_name($contact);
+        $chan_config->{+CHAN_NAME}      = validate_channel_name($chan_name);
         $chan_config->{+CHAN_CALL_TYPE} = validate_call_type($call_type);
         $do_multiply = 1;
     }
@@ -733,6 +744,69 @@ sub handle_repeater_value
     return ($timeslot, $call_type);
 }
 
+sub handle_nickname_values
+{
+    my ($value) = @_;
+
+    #  OLY;Olympia/Cap Pk.
+    my @subvalues = split(';', $value);
+
+    my $full = shift(@subvalues);
+    my $nick = '';
+    foreach my $v (@subvalues)
+    {
+        $nick = $v;
+    }
+
+    return ($full, $nick);
+}
+
+sub make_channel_name
+{
+    my ($zone_nick, $chan_full, $chan_nick) = @_;
+
+    if ($global_nickname_mode eq 'off' || length($zone_nick) == 0)
+    {
+        return $chan_full;
+    }
+
+    if (length($chan_nick) == 0)
+    {
+        $chan_nick = $chan_full;
+    }
+
+    my ($chan_name, $sep);
+    if (length($zone_nick) + length($chan_full) + 1 <= LENGTH_CHAN_NAME)
+    {
+        $chan_name = $chan_full;
+        $sep = ' ';
+    }
+    elsif(length($zone_nick) + length($chan_nick) + 1 <= LENGTH_CHAN_NAME)
+    {
+        $chan_name = $chan_nick;
+        $sep = ' ';
+    }
+    elsif(length($zone_nick) + length($chan_nick) <= LENGTH_CHAN_NAME)
+    {
+        $chan_name = $chan_nick;
+        $sep = '';
+    }
+    else
+    {
+        error("Can't make a channel name fit into 16 characters for '$zone_nick' and '$chan_nick'");
+    }
+
+    if ($global_nickname_mode eq 'prefix')
+    {
+        return $zone_nick . $sep . $chan_name;
+    }
+    else
+    {
+        return $chan_name . $sep . $zone_nick;
+    }
+        
+}
+
 
 
 ################################################################################
@@ -765,7 +839,7 @@ sub validate_channel_name
 {
     my ($contact) = @_;
 
-    return _validate_string_length('Channel Name', $contact, 16);
+    return _validate_string_length('Channel Name', $contact, LENGTH_CHAN_NAME);
 
 }
 
@@ -780,7 +854,7 @@ sub validate_contact
 {
     my ($contact) = @_;
 
-    return _validate_string_length("Contact (aka Talk Group)", $contact, 16);
+    return _validate_string_length("Contact (aka Talk Group)", $contact, LENGTH_CHAN_NAME);
 }
 
 sub validate_ctcss
@@ -801,7 +875,7 @@ sub validate_name
 {
 	my ($name) = @_;
 
-	return _validate_string_length('Channel Name', $name, 16);
+	return _validate_string_length('Channel Name', $name, LENGTH_CHAN_NAME);
 }
 
 sub validate_power
@@ -861,6 +935,15 @@ sub validate_hotspot_mode
     my %valid_modes = ("always" => 1, "same-color-code" => 1);
 
     return _validate_membership($hotspot_mode, \%valid_modes, "Hotspot TX Permit");
+}
+
+sub validate_nickname_mode
+{
+    my ($nickname_mode) = @_;
+
+    my %valid_modes = ("off" => 1, "prefix" => 1, "suffix" => 1);
+
+    return _validate_membership($nickname_mode, \%valid_modes, "Nickname Mode");
 }
 
 ####
@@ -941,6 +1024,7 @@ sub handle_command_line_args
                "config:s"                 => \$config_directory,
                "output-directory=s"       => \$output_directory,
                "sorting:s"                => \$global_sort_mode,
+               "nicknames:s"              => \$global_nickname_mode,
                "hotspot-tx-permit:s"      => \$global_hotspot_tx_permit,)
         or usage();
 
@@ -951,6 +1035,7 @@ sub handle_command_line_args
     }
 
     validate_hotspot_mode($global_hotspot_tx_permit);
+    validate_nickname_mode($global_nickname_mode);
 
     if (!defined($analog_filename) || !defined($digital_others_filename) || !defined($digital_repeaters_filename)
         || !defined($talkgroups_filename) || !defined($output_directory))
@@ -980,6 +1065,7 @@ sub usage
     print "  [--config=<config file>]\n";
     print "  [--sorting=(alpha|repeaters-first|analog-first)]\n";
     print "  [--hotspot-tx-permit=(always|same-color-code)]\n";
+    print "  [--nicknames=(off|prefix|suffix)]\n";
     exit -1;
 }
 

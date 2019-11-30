@@ -11,6 +11,7 @@ if(!isset($_FILES["analog"])) {
 print_html_start();
 
 $sort_order = validateSortOrder($_POST["sort"]);
+$nickname_mode = validateNicknameMode($_POST["nicknames"]);
 $hotspot_tx_permit = validateHotSpotTXPermit($_POST["hotspot"]);
 $analog  = fileValidation("Analog",            $_FILES["analog"]);
 $dmr_oth = fileValidation("Digital-Others",    $_FILES["digitalothers"]);
@@ -22,7 +23,8 @@ $outdir = tempdir("dmr-output-");
 
 exec("./anytone-config-builder.pl --analog-csv='$analog' "
      . "--digital-others-csv='$dmr_oth' --digital-repeaters-csv='$dmr_rep' --talkgroups-csv='$talkgrp' "
-     . "--output-directory='$outdir' --sorting=$sort_order --hotspot-tx-permit=$hotspot_tx_permit 2>&1", 
+     . "--output-directory='$outdir' --sorting=$sort_order --hotspot-tx-permit=$hotspot_tx_permit "
+     . "--nicknames=$nickname_mode 2>&1", 
      $output, $return);
 
 
@@ -98,6 +100,18 @@ function validateHotSpotTXPermit($hotspot)
     else
     {
         return "same-color-code";
+    }
+}
+
+function validateNicknameMode($nickname)
+{
+    if ($nickname == "prefix" || $nickname == "suffix")
+    {
+        return $nickname;
+    }
+    else
+    {
+        return "off";
     }
 }
 

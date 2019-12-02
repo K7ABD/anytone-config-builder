@@ -146,7 +146,7 @@ sub zone_row_builder
 {
     my ($zone_number, $zone_name, $zone_record) = @_;
 
-    return generic_row_builder($zone_number, $zone_name, $zone_record, \&zone_row_details, -1, "Zone");
+    return generic_row_builder($zone_number, $zone_name, $zone_record, \&zone_row_details, 250, "Zone");
 }
 
 

@@ -10,6 +10,8 @@ Download these 4 input CSV files:
 * [Digital-Repeaters.csv](examples/Digital-Repeaters.csv)
 * [TalkGroups.csv](examples/TalkGroups.csv)
 
+Note, the above are meant to be examples; they're specific to the Pacific Northwest area and they're a bit out of date.   If you're in the PNW, check out the latest community-managed files on the [PNW Digital's Groups.io site](https://dmr.groups.io/g/PNW-CPS-Programming-Codeplugs/files/Codeplugs/Anytone/ACB/PNW-Community).
+
 ## Step 2: Upload them to the Tool
 Go to the Anytone Config Builder tool, [here](./).  Then choose the 4 files you downloaded above and click "Upload"
 
@@ -57,7 +59,7 @@ I'd recommend filling in the entire row with "-", and then going back to enter "
 Once that's done, and you've double checked that you've got a "-" in all the other talkgroups that aren't on these repeaters, save the file.  You could import it back into the Anytone Config Builder tool and repeat the rest of the steps above.
 
 ## Example: Adding a talkgroup
-Let's say that you want to add some new talk groups.  Using the example above, you wan to add "Seattle 1" and "Seattle 2".  To do that, first go into the Talkgroups.csv (the input csv... not to be confused with the output CSV that was in the zip file).  This file is very simple: talkgroup name in the first column, talk group ID in the second column.  Add a row for "Seattle 1" with "3190" as the talk group and another row with "Seattle 2" and "103190".  Save that.
+Let's say that you want to add some new talk groups.  Using the example above, you wan to add "Seattle 1" and "Seattle 2".  To do that, first go into the Talkgroups.csv (the input csv... not to be confused with the output CSV that was in the zip file).  This file is very simple: talkgroup name in the first column, talk group ID in the second column.  Add a row for "Seattle 1" with "803153" as the talk group and another row with "Seattle 2" and "813153".  Save that.
 
 Next, go back into you the Digital-Repeaters.CSV and add two new columns (either at the end, or try to keep them alphabetized for your own sanity (the tool doesn't care)).  The header for these two columns should be "Seattle 1" and "Seattle 2".  Fill in a "-" for all the repeaters that don't carry these talk groups and a "1" or "2" as you did above to add it to the repeaters that do carry it
 

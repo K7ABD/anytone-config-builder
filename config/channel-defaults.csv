@@ -41,4 +41,8 @@
 40,Digital APRS Report Channel,1
 41,Correct Frequency[Hz],0
 42,SMS Confirmation,Off
-43,Exclude channel from roaming,off
+43,Exclude channel from roaming,0
+44,Contact Call Type,Group Call
+45,Contact TG/DMR ID,0
+46,AES Digital Encryption,Normal Encryption
+47,DMR MODE,0

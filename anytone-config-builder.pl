@@ -19,7 +19,9 @@ use constant {
     CHAN_CTCSS_DEC      => 7,
     CHAN_CTCSS_ENC      => 8,
     CHAN_CONTACT        => 9,
-    CHAN_CALL_TYPE      => 10,
+    CHAN_CALL_TYPE_OLD  => 10,
+    CHAN_CALL_TYPE_NEW  => 44,
+    CHAN_TG_ID          => 45,
     CHAN_TX_PERMIT      => 12,
     CHAN_SQUELCH_MODE   => 13,
     CHAN_COLOR_CODE     => 19,
@@ -390,8 +392,10 @@ sub dmr_others_csv_field_extractor
     $chan_config{+CHAN_TX_FREQ}         = validate_freq(        $row->[4]);
     $chan_config{+CHAN_COLOR_CODE}      = validate_color_code(  $row->[5]);
     $chan_config{+CHAN_CONTACT}         = validate_contact(     $row->[6]);
+    $chan_config{+CHAN_TG_ID}           = $talkgroup_mapping    {$row->[6]};
     $chan_config{+CHAN_TIME_SLOT}       = validate_timeslot(    $row->[7]);  
-    $chan_config{+CHAN_CALL_TYPE}       = validate_call_type(   $row->[8]); 
+    $chan_config{+CHAN_CALL_TYPE_OLD}   = validate_call_type(   $row->[8]); 
+    $chan_config{+CHAN_CALL_TYPE_NEW}   = validate_call_type(   $row->[8]); 
     $chan_config{+CHAN_TX_PERMIT}       = validate_tx_permit(   $row->[9]); 
     $chan_config{+CHAN_MODE}            = VAL_DIGITAL;
 
@@ -452,10 +456,12 @@ sub dmr_repeater_csv_matrix_extractor
 
         my $chan_name = make_channel_name($chan_config->{+ACB_ZONE_NICKNAME}, $contact, $chan_nick);
 
-        $chan_config->{+CHAN_CONTACT}   = validate_contact($contact);
-        $chan_config->{+CHAN_TIME_SLOT} = validate_timeslot($timeslot);
-        $chan_config->{+CHAN_NAME}      = validate_channel_name($chan_name);
-        $chan_config->{+CHAN_CALL_TYPE} = validate_call_type($call_type);
+        $chan_config->{+CHAN_CONTACT}       = validate_contact($contact);
+        $chan_config->{+CHAN_TG_ID}         = $talkgroup_mapping{$contact};
+        $chan_config->{+CHAN_TIME_SLOT}     = validate_timeslot($timeslot);
+        $chan_config->{+CHAN_NAME}          = validate_channel_name($chan_name);
+        $chan_config->{+CHAN_CALL_TYPE_OLD} = validate_call_type($call_type);
+        $chan_config->{+CHAN_CALL_TYPE_NEW} = validate_call_type($call_type);
         $do_multiply = 1;
     }
 
@@ -678,7 +684,7 @@ sub build_talkgroup_config
 
     if (!defined($talkgroup_mapping{$talkgroup}))
     {
-        error("Talkgroup '$talkgroup' is referenced by not defined in the talkgroup CSV file\n");
+        error("Talkgroup '$talkgroup' is referenced but not defined in the talkgroup CSV file\n");
     }
 
     $talkgroup_config{$talkgroup} = 1;
@@ -856,6 +862,7 @@ sub validate_contact
 
     return _validate_string_length("Contact (aka Talk Group)", $contact, LENGTH_CHAN_NAME);
 }
+
 
 sub validate_ctcss
 {

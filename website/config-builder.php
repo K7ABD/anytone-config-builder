@@ -105,7 +105,7 @@ function validateHotSpotTXPermit($hotspot)
 
 function validateNicknameMode($nickname)
 {
-    if ($nickname == "prefix" || $nickname == "suffix")
+    if ($nickname == "prefix" || $nickname == "suffix" || $nickname == "prefix-forced" || $nickname = "suffix-forced")
     {
         return $nickname;
     }

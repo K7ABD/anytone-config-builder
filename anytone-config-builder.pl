@@ -781,6 +781,11 @@ sub make_channel_name
         $chan_nick = $chan_full;
     }
 
+    if ($global_nickname_mode eq 'prefix-forced' || $global_nickname_mode eq 'suffix-forced')
+    {
+        $chan_full = $chan_nick;
+    }
+
     my ($chan_name, $sep);
     if (length($zone_nick) + length($chan_full) + 1 <= LENGTH_CHAN_NAME)
     {
@@ -802,7 +807,13 @@ sub make_channel_name
         error("Can't make a channel name fit into 16 characters for '$zone_nick' and '$chan_nick'");
     }
 
-    if ($global_nickname_mode eq 'prefix')
+    # some people like to prefix their nicknames with "-" or "/", drop the space in that case
+    if ($zone_nick !~ /^[A-Za-z0-9]/)
+    {
+        $sep = '';
+    }
+
+    if ($global_nickname_mode eq 'prefix' || $global_nickname_mode eq 'prefix-forced')
     {
         return $zone_nick . $sep . $chan_name;
     }
@@ -948,7 +959,7 @@ sub validate_nickname_mode
 {
     my ($nickname_mode) = @_;
 
-    my %valid_modes = ("off" => 1, "prefix" => 1, "suffix" => 1);
+    my %valid_modes = ("off" => 1, "prefix" => 1, "suffix" => 1, "prefix-forced" => 1, "suffix-forced" => 1);
 
     return _validate_membership($nickname_mode, \%valid_modes, "Nickname Mode");
 }

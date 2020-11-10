@@ -23,4 +23,6 @@ Some people prefer to have their channel names indicate which repeater they're u
 
 To use this, add a nickname to each of the zones in the Digital Repeates file, like so:  "Full Zone Name;FZN" or "Olympia/Cap Pk.;OLY".  If you select eithe "prefix" or "suffix" for Digital Repeater Nicknames, the tool will create channel names that include your nickname.
 
+You can choose "prefix (if needed)" or "suffix (if needed)" and the prefix/suffix will be used only if the channel name length exceed 16 characters.   If you choose "prefix (forced)" or "suffix (forced)", the prefix/suffix will be used even if the longer name would have fit.
+
 Additionally, because some talkgroups have long names and the Anytone radios support only 16 character channel names, you can also provide a shortened name for your talkgroups in a similar manner.  For example, "Worldwide English" might become "Worldwide English;WW English" leaving enough room for your prefix/suffix.

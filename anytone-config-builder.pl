@@ -28,6 +28,7 @@ use constant {
     CHAN_TIME_SLOT      => 20,
     CHAN_SCANLIST_NAME  => 21,
     CHAN_TX_PROHIBIT    => 23,
+    CHAN_DMR_MODE       => 47,
     ACB_ZONE_NICKNAME   => 1000,
 };
 
@@ -41,6 +42,8 @@ use constant {
     VAL_CALL_TYPE_GROUP   => "Group Call",
     VAL_CALL_TYPE_PRIVATE => "Private Call",
     VAL_CTCSS_DCS         => "CTCSS/DCS",
+    VAL_DMR_MODE_SIMPLEX  => 0,
+    VAL_DMR_MODE_REPEATER => 1,
     LENGTH_CHAN_NAME      => 16,
 };
 
@@ -397,6 +400,7 @@ sub dmr_others_csv_field_extractor
     $chan_config{+CHAN_CALL_TYPE_OLD}   = validate_call_type(   $row->[8]); 
     $chan_config{+CHAN_CALL_TYPE_NEW}   = validate_call_type(   $row->[8]); 
     $chan_config{+CHAN_TX_PERMIT}       = validate_tx_permit(   $row->[9]); 
+    $chan_config{+CHAN_DMR_MODE}        = dmr_mode(             \%chan_config);
     $chan_config{+CHAN_MODE}            = VAL_DIGITAL;
 
 
@@ -436,6 +440,7 @@ sub dmr_repeater_csv_field_extractor
     $chan_config{+CHAN_RX_FREQ}         = validate_freq(       $row->[3]);
     $chan_config{+CHAN_TX_FREQ}         = validate_freq(       $row->[4]);
     $chan_config{+CHAN_COLOR_CODE}      = validate_color_code( $row->[5]);
+    $chan_config{+CHAN_DMR_MODE}        = dmr_mode(            \%chan_config);
     $chan_config{+CHAN_MODE}            = VAL_DIGITAL;
 
     return \%chan_config;
@@ -731,6 +736,20 @@ sub tx_permit
 
     return $result;
 }
+
+sub dmr_mode
+{
+    my ($chan_config) = @_;
+
+    my $result = VAL_DMR_MODE_SIMPLEX;
+    if ($chan_config->{+CHAN_RX_FREQ} ne $chan_config->{+CHAN_TX_FREQ})
+    {
+        $result = VAL_DMR_MODE_REPEATER;
+    }
+
+    return $result;
+}
+
 
 
 sub handle_repeater_value

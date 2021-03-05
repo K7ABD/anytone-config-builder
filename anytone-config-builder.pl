@@ -648,7 +648,9 @@ sub add_channel
 
     build_zone_config(     $chan_config, $zone_name, $zone_order_index);
     build_scanlist_config( $chan_config, $scanlist_name);
-    build_talkgroup_config($chan_config);
+    if ($chan_config->{+CHAN_MODE} eq VAL_DIGITAL) {
+        build_talkgroup_config($chan_config);
+    } 
 }
 
 

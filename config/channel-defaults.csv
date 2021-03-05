@@ -46,3 +46,6 @@
 45,Contact TG/DMR ID,0
 46,AES Digital Encryption,Normal Encryption
 47,DMR MODE,0
+48,PTT Prohibit,Off
+49,Talk Around(Simplex),Off
+50,APRS RX,Off

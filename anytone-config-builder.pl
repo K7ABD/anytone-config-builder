@@ -29,6 +29,7 @@ use constant {
     CHAN_SCANLIST_NAME  => 21,
     CHAN_TX_PROHIBIT    => 23,
     CHAN_DMR_MODE       => 47,
+    CHAN_PTT_PROHIBIT   => 48,
     ACB_ZONE_NICKNAME   => 1000,
 };
 
@@ -359,6 +360,7 @@ sub analog_csv_field_extractor
     $chan_config{+CHAN_CTCSS_DEC}       = validate_ctcss(       $row->[6]);
     $chan_config{+CHAN_CTCSS_ENC}       = validate_ctcss(       $row->[7]);
     $chan_config{+CHAN_TX_PROHIBIT}     = validate_tx_prohibit( $row->[8]);
+    $chan_config{+CHAN_PTT_PROHIBIT}    = validate_tx_prohibit( $row->[8]);
     $chan_config{+CHAN_MODE}            = VAL_ANALOG;
 
     if ($chan_config{+CHAN_CTCSS_DEC} ne "Off")

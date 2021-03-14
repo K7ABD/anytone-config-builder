@@ -168,14 +168,16 @@ sub talkgroup_row_builder
 {
     my ($tg_number, $talkgroup_name, $junk) = @_;
 
+    my $call_type = $talkgroup_config{$talkgroup_name};
+
     my @values;
 
     push @values, $tg_number;
-    push @values, $talkgroup_mapping{$talkgroup_name};;
+    push @values, $talkgroup_mapping{$talkgroup_name};
     push @values, $talkgroup_name;
     push @values, "";
     push @values, "";
-    push @values, "Group Call";
+    push @values, $call_type;
     push @values, "None";
 
     return \@values;
@@ -651,7 +653,7 @@ sub add_channel
     build_zone_config(     $chan_config, $zone_name, $zone_order_index);
     build_scanlist_config( $chan_config, $scanlist_name);
     if ($chan_config->{+CHAN_MODE} eq VAL_DIGITAL) {
-        build_talkgroup_config($chan_config);
+        build_talkgroup_config($chan_config, $zone_name);
     } 
 }
 
@@ -687,16 +689,31 @@ sub build_scanlist_config
 
 sub build_talkgroup_config
 {
-    my ($chan_config) = @_;
+    my ($chan_config, $zone_name) = @_;
 
     my $talkgroup = $chan_config->{+CHAN_CONTACT};
+    my $call_type = $chan_config->{+CHAN_CALL_TYPE_OLD};
+    
 
     if (!defined($talkgroup_mapping{$talkgroup}))
     {
-        error("Talkgroup '$talkgroup' is referenced but not defined in the talkgroup CSV file\n");
+        error("Talkgroup '$talkgroup' is referenced but not defined in the talkgroup input CSV file\n");
     }
 
-    $talkgroup_config{$talkgroup} = 1;
+    if (defined($talkgroup_config{$talkgroup}) && $talkgroup_config{$talkgroup} ne $call_type)
+    {
+        my $other_call_type = $talkgroup_config{$talkgroup};
+        my $chan_name = $chan_config->{+CHAN_NAME};
+        my $rx_freq   = $chan_config->{+CHAN_RX_FREQ};
+        my $tx_freq   = $chan_config->{+CHAN_TX_FREQ};
+
+        error("Talkgroup '$talkgroup' was previously identified as a '$other_call_type', but is now trying to be "
+            . "used as a '$call_type' on channel '$chan_name' (Zone: '$zone_name', RX: $rx_freq, TX: $tx_freq).  "
+            . "The Anytone CPS won't allow this to be imported.   To fix this, create a second entry in your "
+            . "talkgroups CSV input file for this talkgroup with a different name.\n");
+    }
+
+    $talkgroup_config{$talkgroup} = $call_type;
 }
 
 

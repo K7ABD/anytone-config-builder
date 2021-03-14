@@ -67,6 +67,7 @@ my %scanlist_config;
 my %talkgroup_config;
 my %talkgroup_order;
 my $csv;
+my $csv_out;
 
 
 main();
@@ -79,7 +80,8 @@ sub main
     my ($analog_filename, $digital_others_filename, $digital_repeaters_filename, $talkgroups_filename,
         $config_directory, $output_directory) = handle_command_line_args();
 
-    $csv = Text::CSV_XS->new({binary => 1, auto_diag => 1, always_quote => 1, eol => "\r\n"});
+    $csv     = Text::CSV_XS->new({binary => 1, auto_diag => 1, always_quote => 1, eol => "\n"});
+    $csv_out = Text::CSV_XS->new({binary => 1, auto_diag => 1, always_quote => 1, eol => "\r\n"});
 
     read_talkgroups($talkgroups_filename);
     read_channel_csv_default( "$config_directory/channel-defaults.csv");
@@ -264,7 +266,7 @@ sub generate_csv_file
 
     open(my $fh, ">$filename") or error("Couldn't open file '$filename': $!\n");
 
-    $csv->print($fh, $headers);
+    $csv_out->print($fh, $headers);
 
     my $row_num = 1;
     foreach my $key (sort $sort_func keys %{$data})
@@ -272,7 +274,7 @@ sub generate_csv_file
         my $value = $data->{$key};
         my $row = $row_func->($row_num, $key, $value);
 
-        $csv->print($fh, $row);
+        $csv_out->print($fh, $row);
 
         $row_num++;
     }
@@ -291,7 +293,7 @@ sub print_channel_header
         push @output, $channel_csv_field_name{$index};
     } 
 
-    $csv->print($out_fh, \@output);
+    $csv_out->print($out_fh, \@output);
 }
 
 
@@ -489,7 +491,7 @@ sub read_channel_csv_default
 {
     my ($filename) = @_;
 
-    open(my $fh, $filename) or error("Couldn't open file '$filename': $!\n");
+    open(my $fh, '<:crlf', $filename) or error("Couldn't open file '$filename': $!\n");
 
     for(my $line_no = 0; my $row = $csv->getline($fh); $line_no++)
     {
@@ -505,7 +507,7 @@ sub read_talkgroups
 {
     my ($filename) = @_;
 
-    open(my $fh, $filename) or error("Couldn't open file '$filename': $!\n");
+    open(my $fh,  '<:crlf', $filename) or error("Couldn't open file '$filename': $!\n");
 
     my $index = 1;
     for(my $line_no = 0; my $row = $csv->getline($fh); $line_no++)
@@ -544,7 +546,7 @@ sub process_csv_file_with_header
     $global_file_name = $file_nickname;
 
     my $zone_order_index = 1;
-    open(my $fh, $filename) or error("Couldn't open file '$filename': $!\n");
+    open(my $fh,  '<:crlf', $filename) or error("Couldn't open file '$filename': $!\n");
     for(my $line_no = 0; my $row = $csv->getline($fh); $line_no++)	
 	{
         $global_line_number = $line_no;
@@ -648,7 +650,7 @@ sub add_channel
         push @output, $value; 
     } 
 
-    $csv->print($out_fh, \@output);
+    $csv_out->print($out_fh, \@output);
 
     build_zone_config(     $chan_config, $zone_name, $zone_order_index);
     build_scanlist_config( $chan_config, $scanlist_name);

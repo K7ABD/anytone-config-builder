@@ -596,7 +596,7 @@ sub process_csv_file_with_header
             {
                 if (!defined($matrix_field_extractor))
                 {
-                    error("There are too many columns in '$filename'.\n");
+                    error("There are too many columns in '$file_nickname' file, line $line_no.\n");
                 }
                 my ($do_matrix, $chan_config) = $matrix_field_extractor->($chan_config, $headers[$col], $row->[$col]);
 

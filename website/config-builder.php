@@ -81,7 +81,7 @@ function validateSortOrder($sort_order)
 {
     if ($sort_order == "alpha" ||
         $sort_order == "repeaters-first" || 
-        $sort_order == "analog_first" )
+        $sort_order == "analog-first" )
     {
         return $sort_order;
     }

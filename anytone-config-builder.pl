@@ -38,6 +38,7 @@ use constant {
     VAL_DIGITAL           => 'D-Digital',
     VAL_ANALOG            => 'A-Analog',
     VAL_NO_TIME_SLOT      => "-", # this is from the input CSV, not a Anytone-ism
+    VAL_TX_PERMIT_FREE    => "ChannelFree",
     VAL_TX_PERMIT_SAME    => "Same Color Code",
     VAL_TX_PERMIT_ALWAYS  => "Always",
     VAL_CALL_TYPE_GROUP   => "Group Call",
@@ -960,7 +961,7 @@ sub validate_tx_permit
 {
     my ($tx_permit) = @_;
 
-    my %valid_tx_permits = ("Always" => 1, "Same Color Code" => 1, "Different Color Code" => 1);
+    my %valid_tx_permits = ("Always" => 1, "ChannelFree" => 1, "Same Color Code" => 1, "Different Color Code" => 1);
 
     return _validate_membership($tx_permit, \%valid_tx_permits, "TX Permit");
 }
